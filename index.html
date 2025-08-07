@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Bachelor Party Bingo — Custom & Play</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #fff9f0;
+      color: #2c2c2c;
+      min-height: 100vh;
+      user-select: none;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 600;
+      margin: 20px 10px 16px;
+      color: #d84315;
+      font-size: 1.8rem;
+    }
+    button {
+      cursor: pointer;
+      border-radius: 12px;
+      border: none;
+      background: #d84315;
+      color: white;
+      font-weight: 700;
+      padding: 10px 28px;
+      font-size: 16px;
+      box-shadow: 0 4px 8px rgba(216,67,21,0.5);
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    button:disabled {
+      background: #e57373;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    button:hover:not(:disabled) {
+      background: #a32f0d;
+    }
+    /* Container for both pages */
+    #setupPage, #gamePage {
+      max-width: 460px;
+      margin: 0 auto 40px;
+      padding: 0 15px;
+    }
+    /* Hide by default, show only active page */
+    .page {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
+
+    /* Setup Page Styles */
+    #setupPage label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+      margin-top: 18px;
+    }
+    #setupPage input[type="text"] {
+      width: 100%;
+      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1.5px solid #fbc02d;
+      box-shadow: inset 0 1px 3px rgba(251,192,45,0.3);
+      transition: border-color 0.3s ease;
+    }
+    #setupPage input[type="text"]:focus {
+      border-color: #d84315;
+      outline: none;
+      box-shadow: 0 0 7px #d84315aa;
+    }
+    #setupPage .btn-group {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    #setupPage .small {
+      font-size: 13px;
+      color: #555;
+      margin-top: 10px;
+      text-align: center;
+    }
+    #loadSavedBtn {
+      background: #3949ab;
+    }
+    #loadSavedBtn:hover {
+      background: #2e3b90;
+    }
+    #clearSavedBtn {
+      background: #e53935;
+    }
+    #clearSavedBtn:hover {
+      background: #b22a29;
+    }
+
+    /* Game Page Styles */
+    #userInfo {
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      color: #d84315;
+    }
+    #userColor {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid #555;
+      margin-left: 8px;
+      vertical-align: middle;
+      box-shadow: 0 0 6px rgba(0,0,0,0.15);
+    }
+    #instructions {
+      background: #fff3e0;
+      border: 1.5px solid #fbc02d;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 2px 6px rgba(251,192,45,0.3);
+      user-select: none;
+    }
+    #bingoTable {
+      border-collapse: separate;
+      border-spacing: 10px;
+      margin: 0 auto 20px;
+      width: 90vw;
+      max-width: 440px;
+      background: #fffbf6;
+      padding: 15px;
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(216,67,21,0.2);
+      user-select: none;
+    }
+    td {
+      background: #ffe8d6;
+      border-radius: 12px;
+      border: 2.5px solid #d84315;
+      padding: 14px 12px;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #5c2c0a;
+      cursor: pointer;
+      min-height: 70px;
+      transition:
+        background-color 0.3s ease,
+        box-shadow 0.3s ease,
+        color 0.25s ease,
+        transform 0.15s ease;
+      box-shadow: inset 0 0 0 transparent;
+    }
+    td.free-shot {
+      font-weight: 700;
+      background: #fdd835;
+      color: #5d4037;
+      box-shadow:
+        0 0 8px 3px #fbc02d inset,
+        0 0 12px 1px #f9a825;
+    }
+    td.marked {
+      color: white !important;
+      box-shadow:
+        0 4px 8px rgba(0,0,0,0.25);
+      transform: scale(1.05);
+    }
+    td.marked.free-shot {
+      box-shadow:
+        0 0 14px 5px #f57f17 inset,
+        0 0 20px 3px #fbc02d;
+    }
+    td:hover:not(.marked) {
+      background-color: #ffdca8;
+    }
+    #winnerMessage {
+      max-width: 420px;
+      margin: 18px auto 8px auto;
+      font-weight: 700;
+      font-size: 18px;
+      color: #d84315;
+      text-align: center;
+      min-height: 32px;
+      user-select: none;
+    }
+    #resetBtn, #backBtn {
+      display: inline-block;
+      margin: 0 8px;
+      padding: 10px 22px;
+      font-weight: 600;
+      border-radius: 14px;
+      border: none;
+      background: #d84315;
+      color: white;
+      box-shadow: 0 4px 8px rgba(216,67,21,0.5);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      min-width: 120px;
+    }
+    #resetBtn:hover, #backBtn:hover {
+      background: #a32f0d;
+    }
+    #buttonGroup {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    #footer {
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+      margin-top: auto;
+      user-select: none;
+      padding-bottom: 20px;
+    }
+    @media (max-width: 380px) {
+      td {
+        font-size: 12px;
+        min-height: 60px;
+        padding: 12px 10px;
+      }
+      #instructions {
+        font-size: 13px;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      #setupPage label {
+        margin-top: 12px;
+      }
+      button {
+        min-width: unset;
+        padding: 10px 18px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bachelor Party Bingo 🎉</h1>
+
+  <!-- SETUP PAGE -->
+  <section id="setupPage" class="page active" aria-label="Game setup page">
+    <p>Choose to start with the <strong>default card</strong> or <strong>create your own custom bingo card</strong> with 16 items.</p>
+
+    <div class="btn-group" style="justify-content:center; margin-top:10px;">
+      <button id="defaultCardBtn" aria-label="Start game with default card">Use Default Card</button>
+      <button id="customCardBtn" aria-label="Create and customize bingo card">Create Custom Card</button>
+    </div>
+
+    <form id="customCardForm" style="margin-top:20px; display:none;" aria-label="Custom bingo card editor">
+      <label for="playerNameSetup">Enter your name:</label>
+      <input type="text" id="playerNameSetup" placeholder="Your name" autocomplete="off" required />
+
+      <p style="margin-top:15px; font-weight:600;">Enter your 16 bingo items (one per box):</p>
+      <div id="customInputsGrid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">
+        <!-- 16 text inputs inserted by JS -->
+      </div>
+
+      <div class="btn-group" style="margin-top: 15px; justify-content: center;">
+        <button type="submit" id="startCustomGameBtn" disabled>Start Custom Game</button>
+      </div>
+
+      <p class="small" style="margin-top:12px; text-align:center;">
+        You can save your card to browser storage and load it later:<br/>
+        <button type="button" id="saveCardBtn" disabled>Save Card</button>
+        <button type="button" id="loadSavedBtn">Load Saved Card</button>
+        <button type="button" id="clearSavedBtn">Clear Saved Card</button>
+      </p>
+    </form>
+  </section>
+
+  <!-- GAME PAGE -->
+  <section id="gamePage" class="page" aria-label="Bingo game page" hidden>
+    <div id="userInfo" aria-live="polite">Player: <span id="userNameDisplay"></span><span id="userColor" aria-label="User's assigned color"></span></div>
+    <div id="instructions" aria-live="polite">
+      <strong>Instructions:</strong><br/>
+      Tap a square to mark or unmark it. Your color shows who marked it.<br/>
+      Center square is a <strong>free shot for Stephan!</strong><br/>
+      Get 4 in a row (horizontal, vertical, diagonal) to call <strong>BINGO!</strong><br/>
+      The winner picks who drinks and <strong style="color:#d84315;">Stephan takes a shot!</strong><br/>
+      Use the buttons below or refresh to clear all marks or return to setup.<br/>
+    </div>
+
+    <table id="bingoTable" role="grid" tabindex="0" aria-label="Bachelor Party Bingo Grid"></table>
+
+    <div id="buttonGroup">
+      <button id="resetBtn" aria-label="Clear all marks and reset the game">Clear All Marks</button>
+      <button id="backBtn" aria-label="Back to game setup">Back to Setup</button>
+    </div>
+
+    <div id="winnerMessage" aria-live="assertive" role="alert"></div>
+  </section>
+
+  <div id="footer" aria-hidden="true">
+    Created by ChatGPT for your Bachelor Party
+  </div>
+
+<script>
+  (() => {
+    // Default card items
+    const defaultBingoItems = [
+      "Groom says 'I love you guys'",
+      "Someone calls their partner",
+      "Breaks their glass",
+      "Drinks before 10:00",
+      "Someone disappears for hours",
+      "Someone takes a nap midday",
+      "🥃 FREE SHOT: STEPHAN",
+      "Falls asleep in a weird place",
+      "Someone throws up",
+      "Someone falls",
+      "Drinking game goes off the rails",
+      "'When’s the wedding?' question",
+      "'Shot! Shot! Shot!' chant",
+      "Group sings along to a song",
+      "Awkward speech",
+      "Someone passes out"
+    ];
+
+    // Elements
+    const setupPage = document.getElementById('setupPage');
+    const gamePage = document.getElementById('gamePage');
+    const defaultCardBtn = document.getElementById('defaultCardBtn');
+    const customCardBtn = document.getElementById('customCardBtn');
+    const customCardForm = document.getElementById('customCardForm');
+    const customInputsGrid = document.getElementById('customInputsGrid');
+    const startCustomGameBtn = document.getElementById('startCustomGameBtn');
+    const playerNameSetup = document.getElementById('playerNameSetup');
+    const saveCardBtn = document.getElementById('saveCardBtn');
+    const loadSavedBtn = document.getElementById('loadSavedBtn');
+    const clearSavedBtn = document.getElementById('clearSavedBtn');
+
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const userColorElem = document.getElementById('userColor');
+    const bingoTable = document.getElementById('bingoTable');
+    const instructions = document.getElementById('instructions');
+    const resetBtn = document.getElementById('resetBtn');
+    const backBtn = document.getElementById('backBtn');
+    const winnerMessage = document.getElementById('winnerMessage');
+
+    // State variables
+    let userName = '';
+    let userColor = '';
+    let bingoItems = [];
+    let marks = [];
+    let gameActive = false;
+
+    // Util: Generate bright color
+    function generateBrightColor() {
+      const hue = Math.floor(Math.random() * 360);
+      const saturation = 70 + Math.floor(Math.random() * 30);
+      const lightness = 50 + Math.floor(Math.random() * 20);
+      return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    }
+
+    // Save/load key
+    const localStorageKey = 'customBingoCard_v1';
+
+    // Create 16 input fields for custom card
+    function createCustomInputs() {
+      customInputsGrid.innerHTML = '';
+      for(let i=0; i<16; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Item ${i+1}`;
+        input.setAttribute('aria-label', `Bingo item ${i+1}`);
+        input.required = true;
+        input.addEventListener('input', checkCustomFormValidity);
+        customInputsGrid.appendChild(input);
+      }
+    }
+
+    // Check if form is valid (all inputs filled and player name)
+    function checkCustomFormValidity() {
+      const inputs = customInputsGrid.querySelectorAll('input');
+      const allFilled = [...inputs].every(input => input.value.trim() !== '');
+      startCustomGameBtn.disabled = !allFilled || playerNameSetup.value.trim() === '';
+      saveCardBtn.disabled = !allFilled;
+    }
+
+    // Load saved card from localStorage
+    function loadSavedCard() {
+      const saved = localStorage.getItem(localStorageKey);
+      if (!saved) {
+        alert('No saved card found.');
+        return;
+      }
+      try {
+        const obj = JSON.parse(saved);
+        if (!obj.items || obj.items.length !== 16) throw new Error('Invalid saved data');
+        // Populate inputs & name
+        const inputs = customInputsGrid.querySelectorAll('input');
+        obj.items.forEach((item, i) => {
+          inputs[i].value = item;
+        });
+        playerNameSetup.value = obj.playerName || '';
+        checkCustomFormValidity();
+        alert('Saved card loaded!');
+      } catch {
+        alert('Failed to load saved card data.');
+      }
+    }
+
+    // Save current card to localStorage
+    function saveCard() {
+      const inputs = customInputsGrid.querySelectorAll('input');
+      const items = [...inputs].map(i => i.value.trim());
+      const name = playerNameSetup.value.trim();
+      if (items.some(i => i === '') || !name) {
+        alert('Fill in all items and your name before saving.');
+        return;
+      }
+      const obj = {
+        playerName: name,
+        items,
+      };
+      localStorage.setItem(localStorageKey, JSON.stringify(obj));
+      alert('Card saved to browser storage!');
+    }
+
+    // Clear saved card from localStorage
+    function clearSaved() {
+      if (confirm('Are you sure you want to clear the saved card?')) {
+        localStorage.removeItem(localStorageKey);
+        alert('Saved card cleared.');
+      }
+    }
+
+    // Switch pages
+    function showPage(page) {
+      setupPage.classList.remove('active');
+      setupPage.hidden = true;
+      gamePage.classList.remove('active');
+      gamePage.hidden = true;
+      page.classList.add('active');
+      page.hidden = false;
+      winnerMessage.textContent = '';
+    }
+
+    // Build bingo table with current bingoItems
+    function buildTable() {
+      bingoTable.innerHTML = '';
+      marks = Array(4).fill(null).map(() => Array(4).fill(''));
+      for(let r=0; r<4; r++) {
+        const row = document.createElement('tr');
+        for(let c=0; c<4; c++) {
+          const idx = r*4 + c;
+          const cell = document.createElement('td');
+          cell.textContent = bingoItems[idx];
+          cell.setAttribute('role', 'gridcell');
+          cell.setAttribute('tabindex', '0');
+          if (bingoItems[idx].includes('FREE SHOT')) {
+            cell.classList.add('free-shot');
+          }
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+          cell.addEventListener('click', () => toggleMark(r, c, cell));
+          cell.addEventListener('keydown', e => {
+            if(e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleMark(r, c, cell);
+            }
+          });
+          row.appendChild(cell);
+        }
+        bingoTable.appendChild(row);
+      }
+    }
+
+    // Toggle mark on a cell
+    function toggleMark(r, c, cell) {
+      if (!gameActive) return;
+      const currentMark = marks[r][c];
+      if (currentMark === userColor) {
+        marks[r][c] = '';
+        cell.style.backgroundColor = '';
+        cell.classList.remove('marked');
+        cell.title = '';
+      } else if (currentMark === '') {
+        marks[r][c] = userColor;
+        cell.style.backgroundColor = userColor;
+        cell.classList.add('marked');
+        cell.title = `Marked by ${userName}`;
+        if (cell.classList.contains('free-shot')) {
+          alert("🥃 Stephan takes a shot now!");
+        }
+        checkBingo();
+      } else {
+        alert("This square is already marked by another player.");
+      }
+    }
+
+    // Check if someone got bingo
+    function checkBingo() {
+      function fourInLine(cells) {
+        if (cells[0] === '') return false;
+        return cells.every(c => c === cells[0]);
+      }
+      for(let i=0; i<4; i++) {
+        if (fourInLine(marks[i])) {
+          announceWinner(marks[i][0]);
+          return;
+        }
+        const colMarks = [marks[0][i], marks[1][i], marks[2][i], marks[3][i]];
+        if (fourInLine(colMarks)) {
+          announceWinner(colMarks[0]);
+          return;
+        }
+      }
+      const diag1 = [marks[0][0], marks[1][1], marks[2][2], marks[3][3]];
+      if (fourInLine(diag1)) {
+        announceWinner(diag1[0]);
+        return;
+      }
+      const diag2 = [marks[0][3], marks[1][2], marks[2][1], marks[3][0]];
+      if (fourInLine(diag2)) {
+        announceWinner(diag2[0]);
+        return;
+      }
+    }
+
+    // Announce winner
+    function announceWinner(winnerColor) {
+      if (winnerMessage.textContent !== '') return;
+      const winnerIsYou = (winnerColor === userColor);
+      const winnerText = winnerIsYou ? "You" : "A player";
+      winnerMessage.textContent = `${winnerText} got BINGO! 🎉 Stephan must take a shot! Pick someone to drink!`;
+      alert(`${winnerText} got BINGO! Stephan takes a shot! 🎉`);
+    }
+
+    // Reset marks (clear board)
+    function resetGameBoard() {
+      marks = Array(4).fill(null).map(() => Array(4).fill(''));
+      winnerMessage.textContent = '';
+      const cells = bingoTable.querySelectorAll('td');
+      cells.forEach(cell => {
+        cell.style.backgroundColor = '';
+        cell.classList.remove('marked');
+        cell.title = '';
+      });
+    }
+
+    // Initialize custom card inputs and setup listeners
+    function initCustomCardForm() {
+      createCustomInputs();
+      playerNameSetup.value = '';
+      startCustomGameBtn.disabled = true;
+      saveCardBtn.disabled = true;
+
+      // Enable start when all filled + name entered
+      playerNameSetup.addEventListener('input', checkCustomFormValidity);
+
+      // Save/load buttons
+      saveCardBtn.addEventListener('click', saveCard);
+      loadSavedBtn.addEventListener('click', loadSavedCard);
+      clearSavedBtn.addEventListener('click', clearSaved);
+
+      // Submit custom game
+      customCardForm.addEventListener('submit', e => {
+        e.preventDefault();
+        if (startCustomGameBtn.disabled) return;
+        startCustomGame();
+      });
+    }
+
+    // Start default game
+    defaultCardBtn.addEventListener('click', () => {
+      userName = prompt('Enter your name for the game:');
+      if (!userName || !userName.trim()) {
+        alert('Name is required.');
+        return;
+      }
+      userName = userName.trim();
+      bingoItems = [...defaultBingoItems];
+      startGame();
+    });
+
+    // Show custom card form
+    customCardBtn.addEventListener('click', () => {
+      customCardForm.style.display = 'block';
+      defaultCardBtn.disabled = true;
+      customCardBtn.disabled = true;
+      initCustomCardForm();
+    });
+
+    // Start custom game from form inputs
+    function startCustomGame() {
+      userName = playerNameSetup.value.trim();
+      if (!userName) {
+        alert('Please enter your name.');
+        return;
+      }
+      const inputs = customInputsGrid.querySelectorAll('input');
+      const items = [...inputs].map(i => i.value.trim());
+      if (items.some(i => i === '')) {
+        alert('Please fill all bingo items.');
+        return;
+      }
+      bingoItems = items;
+      startGame();
+    }
+
+    // Start the bingo game UI
+    function startGame() {
+      userColor = generateBrightColor();
+      userColorElem.style.backgroundColor = userColor;
+      userNameDisplay.textContent = userName;
+      showPage(gamePage);
+      buildTable();
+      gameActive = true;
+      resetBtn.disabled = false;
+      backBtn.disabled = false;
+    }
+
+    // Reset button
+    resetBtn.addEventListener('click', () => {
+      resetGameBoard();
+    });
+
+    // Back to setup page button
+    backBtn.addEventListener('click', () => {
+      resetGameBoard();
+      winnerMessage.textContent = '';
+      bingoTable.innerHTML = '';
+      gameActive = false;
+      customCardForm.style.display = 'none';
+      defaultCardBtn.disabled = false;
+      customCardBtn.disabled = false;
+      showPage(setupPage);
+    });
+
+  })();
+</script>
+
+</body>
+</html>
